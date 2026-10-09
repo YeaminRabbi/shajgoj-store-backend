@@ -36,4 +36,24 @@ class DeliveryZonePolicy
     {
         return $user->can('manage delivery zones');
     }
+
+    public function restore(User $user, Model $record): bool
+    {
+        return $user->can('manage delivery zones');
+    }
+
+    public function restoreAny(User $user): bool
+    {
+        return $user->can('manage delivery zones');
+    }
+
+    public function forceDelete(User $user, Model $record): bool
+    {
+        return false;
+    }
+
+    public function forceDeleteAny(User $user): bool
+    {
+        return false;
+    }
 }

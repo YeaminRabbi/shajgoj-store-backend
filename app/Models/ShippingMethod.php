@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['name', 'name_bn', 'code', 'type', 'rate_per_kg', 'minimum_charge', 'minimum_weight_kg', 'maximum_weight_kg', 'eta_min_days', 'eta_max_days', 'deposit_percentage', 'is_active', 'starts_at', 'ends_at'])]
 class ShippingMethod extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $attributes = ['rate_per_kg' => 0, 'minimum_charge' => 0, 'minimum_weight_kg' => 0, 'eta_min_days' => 1, 'eta_max_days' => 7, 'deposit_percentage' => 100, 'is_active' => true];
 

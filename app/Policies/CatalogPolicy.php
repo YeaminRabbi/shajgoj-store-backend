@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Models\Category;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
@@ -30,11 +29,31 @@ class CatalogPolicy
 
     public function delete(User $user, Model $record): bool
     {
-        return $user->can('manage catalog') && (! $record instanceof Category || ! $record->products()->exists());
+        return $user->can('manage catalog');
     }
 
     public function deleteAny(User $user): bool
     {
         return $user->can('manage catalog');
+    }
+
+    public function restore(User $user, Model $record): bool
+    {
+        return $user->can('manage catalog');
+    }
+
+    public function restoreAny(User $user): bool
+    {
+        return $user->can('manage catalog');
+    }
+
+    public function forceDelete(User $user, Model $record): bool
+    {
+        return false;
+    }
+
+    public function forceDeleteAny(User $user): bool
+    {
+        return false;
     }
 }

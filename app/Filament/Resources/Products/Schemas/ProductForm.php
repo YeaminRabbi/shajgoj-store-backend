@@ -14,6 +14,7 @@ use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Database\Eloquent\Builder;
 
 class ProductForm
 {
@@ -87,8 +88,8 @@ class ProductForm
                     Section::make('Organization')
                         ->icon(Heroicon::OutlinedSquares2x2)
                         ->schema([
-                            Select::make('category_id')->relationship('category', 'name')->searchable()->preload()->required(),
-                            Select::make('brand_id')->relationship('brand', 'name')->searchable()->preload(),
+                            Select::make('category_id')->relationship('category', 'name', modifyQueryUsing: fn (Builder $query): Builder => $query->withoutTrashed())->searchable()->preload()->required(),
+                            Select::make('brand_id')->relationship('brand', 'name', modifyQueryUsing: fn (Builder $query): Builder => $query->withoutTrashed())->searchable()->preload(),
                             Select::make('type')->label('Product type')->options(['stock' => 'Local stock', 'sourcing' => 'Platform sourcing'])->required()->default('stock'),
                         ]),
                     Section::make('Publishing')

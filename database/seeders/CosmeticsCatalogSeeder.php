@@ -5,10 +5,13 @@ namespace Database\Seeders;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class CosmeticsCatalogSeeder extends Seeder
 {
+    use WithoutModelEvents;
+
     public function run(): void
     {
         $categories = [
@@ -20,7 +23,7 @@ class CosmeticsCatalogSeeder extends Seeder
         ];
 
         $categoryModels = collect($categories)->mapWithKeys(function (array $category, int $index): array {
-            $model = Category::updateOrCreate(
+            $model = Category::withTrashed()->updateOrCreate(
                 ['slug' => $category['slug']],
                 [...$category, 'sort_order' => $index + 20, 'is_active' => true],
             );
@@ -28,7 +31,7 @@ class CosmeticsCatalogSeeder extends Seeder
             return [$category['slug'] => $model];
         });
 
-        $brand = Brand::updateOrCreate(
+        $brand = Brand::withTrashed()->updateOrCreate(
             ['slug' => 'cosmetic-essentials'],
             ['name' => 'Cosmetic Essentials', 'name_bn' => 'কসমেটিক এসেনশিয়ালস', 'status' => 'approved'],
         );
@@ -52,7 +55,7 @@ class CosmeticsCatalogSeeder extends Seeder
         ];
 
         foreach ($products as $productData) {
-            $product = Product::updateOrCreate(
+            $product = Product::withTrashed()->updateOrCreate(
                 ['sku' => $productData['sku']],
                 [
                     'category_id' => $categoryModels[$productData['category']]->id,
@@ -75,7 +78,7 @@ class CosmeticsCatalogSeeder extends Seeder
                 ],
             );
 
-            $product->variants()->updateOrCreate(
+            $product->variants()->withTrashed()->updateOrCreate(
                 ['sku' => $productData['sku'].'-STD'],
                 ['name' => 'Standard', 'price' => $productData['price'], 'stock' => $productData['stock'], 'is_active' => true, 'options' => ['pack' => 'Standard']],
             );

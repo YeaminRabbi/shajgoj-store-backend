@@ -60,7 +60,7 @@ it('creates edits and deletes delivery zones', function () {
     Livewire::test(ManageDeliveryZones::class)->callTableAction(EditAction::class, $zone, data: ['charge' => 100, 'districts' => ['Dhaka', 'Gazipur']])->assertHasNoActionErrors();
     expect($zone->fresh()->charge)->toBe('100.00')->and($zone->fresh()->districts)->toBe(['Dhaka', 'Gazipur']);
     Livewire::test(ManageDeliveryZones::class)->callTableAction(DeleteAction::class, $zone);
-    $this->assertModelMissing($zone);
+    $this->assertSoftDeleted($zone);
 });
 
 it('validates delivery zones', function (array $data, string $field) {
@@ -110,14 +110,14 @@ it('retains delivery zones after deleting a shipping method', function () {
     $method = ShippingMethod::factory()->create();
     $zone = DeliveryZone::factory()->create(['shipping_method_id' => $method->id]);
     $method->delete();
-    expect($zone->fresh()->shipping_method_id)->toBeNull();
+    expect($zone->fresh()->shipping_method_id)->toBe($method->id)->and($zone->fresh()->shippingMethod->trashed())->toBeTrue();
 });
 
 it('deletes an order without deleting its customer', function () {
     $order = Order::factory()->create();
     $customer = $order->customer;
     Livewire::test(ManageOrders::class)->callTableAction(DeleteAction::class, $order);
-    $this->assertModelMissing($order);
+    $this->assertSoftDeleted($order);
     $this->assertModelExists($customer);
 });
 
@@ -130,7 +130,7 @@ it('filters shipping methods by their active dates', function () {
 });
 
 it('rolls back and reapplies shop migrations without removing the catalog', function () {
-    $this->artisan('migrate:rollback', ['--step' => 3])->assertSuccessful();
+    $this->artisan('migrate:rollback', ['--step' => 5])->assertSuccessful();
     expect(Schema::hasTable('orders'))->toBeFalse()->and(Schema::hasTable('delivery_zones'))->toBeFalse()
         ->and(Schema::hasTable('shipping_methods'))->toBeFalse()->and(Schema::hasTable('products'))->toBeTrue();
     $this->artisan('migrate')->assertSuccessful();

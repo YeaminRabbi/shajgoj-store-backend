@@ -2,15 +2,17 @@
 
 namespace App\Filament\Resources\Categories;
 
+use App\Filament\Actions\DependencyAwareDeleteAction as DeleteAction;
+use App\Filament\Actions\DependencyAwareDeleteBulkAction as DeleteBulkAction;
 use App\Filament\Forms\Components\CatalogImageUpload;
 use App\Filament\Resources\Categories\Pages\ManageCategories;
 use App\Models\Category;
 use BackedEnum;
 use Closure;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -19,7 +21,9 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class CategoryResource extends Resource
@@ -43,7 +47,7 @@ class CategoryResource extends Resource
                     ->maxLength(255),
                 TextInput::make('name_bn')->label('Bangla name')->maxLength(255),
                 TextInput::make('slug')->required()->maxLength(255)->unique(ignoreRecord: true),
-                Select::make('parent_id')->relationship('parent', 'name')->searchable()->preload()
+                Select::make('parent_id')->relationship('parent', 'name', modifyQueryUsing: fn (Builder $query): Builder => $query->withoutTrashed())->searchable()->preload()
                     ->rules([fn (?Category $record): Closure => function (string $attribute, mixed $value, Closure $fail) use ($record): void {
                         $visited = [];
                         $parentId = $value;
@@ -75,14 +79,17 @@ class CategoryResource extends Resource
                 IconColumn::make('is_active')->boolean(),
             ])
             ->filters([
+                TrashedFilter::make(),
                 //
             ])
             ->recordActions([
+                RestoreAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    RestoreBulkAction::make(),
                     DeleteBulkAction::make()->authorizeIndividualRecords(),
                 ]),
             ]);

@@ -5,10 +5,13 @@ namespace Database\Seeders;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class StaticCatalogSeeder extends Seeder
 {
+    use WithoutModelEvents;
+
     public function run(): void
     {
         $categories = [
@@ -25,7 +28,7 @@ class StaticCatalogSeeder extends Seeder
         ];
 
         $categoryModels = collect($categories)->mapWithKeys(function (array $category, int $index): array {
-            $model = Category::updateOrCreate(
+            $model = Category::withTrashed()->updateOrCreate(
                 ['slug' => $category[1]],
                 ['name' => $category[0], 'image' => $category[2], 'sort_order' => $index, 'is_active' => true],
             );
@@ -33,7 +36,7 @@ class StaticCatalogSeeder extends Seeder
             return [$category[1] => $model];
         });
 
-        $brand = Brand::updateOrCreate(
+        $brand = Brand::withTrashed()->updateOrCreate(
             ['slug' => 'sky-select'],
             ['name' => 'Sky Select', 'name_bn' => 'স্কাই সিলেক্ট', 'status' => 'approved'],
         );
@@ -58,7 +61,7 @@ class StaticCatalogSeeder extends Seeder
             $image = "https://images.unsplash.com/$photo?auto=format&fit=crop&w=900&q=80";
             $moq = str_starts_with($id, 'abb-') ? 1 : 10;
 
-            $product = Product::updateOrCreate(
+            $product = Product::withTrashed()->updateOrCreate(
                 ['sku' => $sku],
                 [
                     'category_id' => $categoryModels[$category]->id,
@@ -82,7 +85,7 @@ class StaticCatalogSeeder extends Seeder
                 ],
             );
 
-            $product->variants()->updateOrCreate(
+            $product->variants()->withTrashed()->updateOrCreate(
                 ['sku' => "$sku-STD"],
                 ['name' => 'Standard', 'price' => $price, 'stock' => 9999, 'is_active' => true, 'options' => ['pack' => 'Standard']],
             );

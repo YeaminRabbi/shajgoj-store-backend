@@ -7,6 +7,8 @@ use App\Models\Category;
 use App\Models\DeliveryZone;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\User;
+use App\Observers\ShopActivityObserver;
 use App\Policies\CatalogPolicy;
 use App\Policies\DeliveryZonePolicy;
 use App\Policies\OrderPolicy;
@@ -28,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        User::observe(ShopActivityObserver::class);
+        Order::observe(ShopActivityObserver::class);
+        Product::observe(ShopActivityObserver::class);
+
         Gate::policy(Product::class, CatalogPolicy::class);
         Gate::policy(Category::class, CatalogPolicy::class);
         Gate::policy(Brand::class, CatalogPolicy::class);

@@ -57,7 +57,7 @@ it('creates edits and deletes catalog records through Filament', function (strin
     Livewire::test($page)->callTableAction(EditAction::class, $record, data: ['name' => 'Updated Name'])->assertHasNoActionErrors();
     expect($record->fresh()->name)->toBe('Updated Name');
     Livewire::test($page)->callTableAction(DeleteAction::class, $record);
-    $this->assertModelMissing($record);
+    $this->assertSoftDeleted($record);
 })->with([
     'category' => [ManageCategories::class, Category::class, ['name' => 'Skin Care', 'slug' => 'skin-care', 'sort_order' => 0, 'is_active' => true]],
     'brand' => [ManageBrands::class, Brand::class, ['name' => 'Beauty Brand', 'slug' => 'beauty-brand', 'status' => 'approved']],
@@ -88,8 +88,8 @@ it('preserves seeded image urls when editing and deletes variants with the produ
     Livewire::test(EditProduct::class, ['record' => $product->id])->fillForm(['name' => 'Updated Product'])->call('save')->assertHasNoFormErrors();
     expect($product->fresh()->name)->toBe('Updated Product')->and($product->fresh()->primary_image)->toBe($image)->and($product->fresh()->gallery)->toBe($gallery);
     Livewire::test(EditProduct::class, ['record' => $product->id])->callAction(DeleteAction::class);
-    $this->assertModelMissing($product);
-    $this->assertModelMissing($variant);
+    $this->assertSoftDeleted($product);
+    $this->assertSoftDeleted($variant);
 });
 
 it('rejects negative product prices', function () {
@@ -109,7 +109,7 @@ it('prevents assigning a category as its own parent', function () {
 
 it('keeps categories with products protected from deletion', function () {
     $product = Product::factory()->create();
-    Livewire::test(ManageCategories::class)->assertTableActionHidden(DeleteAction::class, $product->category);
+    Livewire::test(ManageCategories::class)->assertTableActionVisible(DeleteAction::class, $product->category);
     $this->assertModelExists($product->category);
 });
 
@@ -153,7 +153,7 @@ it('protects populated categories during bulk deletion', function () {
     $empty = Category::factory()->create();
     Livewire::test(ManageCategories::class)->callTableBulkAction(DeleteBulkAction::class, [$product->category, $empty]);
     $this->assertModelExists($product->category);
-    $this->assertModelMissing($empty);
+    $this->assertSoftDeleted($empty);
 });
 
 it('prevents moving a category beneath a descendant', function () {
@@ -163,10 +163,10 @@ it('prevents moving a category beneath a descendant', function () {
     expect($parent->fresh()->parent_id)->toBeNull();
 });
 
-it('allows deleting a brand without deleting its products', function () {
+it('blocks deleting a brand that still has products', function () {
     $brand = Brand::factory()->create();
     $product = Product::factory()->create(['brand_id' => $brand->id]);
     Livewire::test(ManageBrands::class)->callTableAction(DeleteAction::class, $brand);
-    $this->assertModelMissing($brand);
-    expect($product->fresh()->brand_id)->toBeNull();
+    $this->assertNotSoftDeleted($brand);
+    expect($product->fresh()->brand_id)->toBe($brand->id);
 });

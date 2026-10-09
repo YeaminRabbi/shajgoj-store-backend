@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['shipping_method_id', 'name', 'districts', 'charge', 'cod_enabled', 'is_active'])]
 class DeliveryZone extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $attributes = ['cod_enabled' => false, 'is_active' => true];
 
@@ -21,6 +22,6 @@ class DeliveryZone extends Model
 
     public function shippingMethod(): BelongsTo
     {
-        return $this->belongsTo(ShippingMethod::class);
+        return $this->belongsTo(ShippingMethod::class)->withTrashed();
     }
 }

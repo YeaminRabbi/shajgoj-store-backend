@@ -9,6 +9,8 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\TextInput;
@@ -18,7 +20,9 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class DeliveryZoneResource extends Resource
@@ -40,7 +44,7 @@ class DeliveryZoneResource extends Resource
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                Select::make('shipping_method_id')->relationship('shippingMethod', 'name')->searchable()->preload(),
+                Select::make('shipping_method_id')->relationship('shippingMethod', 'name', modifyQueryUsing: fn (Builder $query, ?DeliveryZone $record): Builder => $query->where(fn (Builder $query): Builder => $query->whereNull('deleted_at')->when($record?->shipping_method_id, fn (Builder $query, int $id): Builder => $query->orWhereKey($id))))->searchable()->preload(),
                 TagsInput::make('districts')->required()->nestedRecursiveRules(['string', 'max:255'])->helperText('District names accepted by checkout.'),
                 TextInput::make('charge')->numeric()->minValue(0)->prefix('৳')->required(),
                 Toggle::make('cod_enabled')->label('COD eligible'),
@@ -62,14 +66,17 @@ class DeliveryZoneResource extends Resource
                 IconColumn::make('is_active')->boolean(),
             ])
             ->filters([
+                TrashedFilter::make(),
                 //
             ])
             ->recordActions([
+                RestoreAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    RestoreBulkAction::make(),
                     DeleteBulkAction::make(),
                 ]),
             ]);
